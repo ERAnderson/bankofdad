@@ -1,6 +1,7 @@
 from datetime import date, timedelta
 import sqlite3
 import sqlalchemy
+from numpy import genfromtxt
 
 from traits.api import HasTraits
 
@@ -63,3 +64,7 @@ class Account(object):
             self.balance *= 1. + savings_interest_rate
         else:
             self.balace *= 1. + loan_interest_rate
+
+    def load_file(self, filename):
+        dt = [('Date', "S10"), ('Action', 'S9'), ('Amount', 'S6'), ('Balance', 'S6'),
+              ('comment', 'S24'), ('f1', '<f8'), ('f2', '<f8')]
