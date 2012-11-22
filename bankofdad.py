@@ -6,8 +6,9 @@ import sqlite3
 import sqlalchemy
 
 # ETS imports
-from traits.api import HasTraits, Property, Int, Float, String
-from traitsus.api import View
+from traits.api import HasTraits, Property, Instance, Int, Date, Enum, Float, \
+     String
+from traitsui.api import View
 
 allowance_period = timedelta(7)
 interest_period = allowance_period
@@ -33,21 +34,30 @@ class Person(HasTraits):
     age = Property(Int, depends_on="DOB")
 
     def _get_age(self):
+        """Return age rounded to the nearest 1/2 year.
+        """
         time_since_birth = date.today() - self.DOB
         return int(time_since_birth.days / 365.25 * 2.) / 2.
 
-class Account(object):
-    savings_interest_rate = 1. / 100.
-    loan_interest_rate = 2. / 100.
-    def __init__(self, owner=None, type="savings", initial_balance=0.0):
-        self.owner = owner
-        assert isinstance(owner, Person)
-        self.balance = initial_balance
-        self.next_interest = last_saturday()
-        self.next_allowance = last_sunday()
+class Account(HasTraits):
+    savings_interest_rate = Float(1. / 100.)
+    loan_interest_rate = Float(2. / 100.)
+    owner = Instance(Person)
+    kind = Enum("Savings")
+    balance = Property(Float)
+    last_interest = Date
+    next_interest = Property(Date, depends_on="last_interest")
+    last_allowance = Date
+    next_allowance = Property(Date, depends_on="last_allowance")
+    weekly_allowance = Property(Float)
 
-    @property
-    def weekly_allowance(self):
+    def _get_next_interest(self):
+        return last_saturday()
+
+    def _get_next_allowance(self):
+        return last_sunday()
+
+    def _get_weekly_allowance(self):
         """Weekly rate"""
         return self.owner.age / 2.0 #dollars
 
@@ -61,9 +71,11 @@ class Account(object):
 
     def apply_allowance(self):
         self.balance += self.weekly_allowance
+        self.last_allowance = self.next_allowance
 
     def apply_interest(self):
         if self.balance > 0:
             self.balance *= 1. + savings_interest_rate
         else:
             self.balace *= 1. + loan_interest_rate
+        self.last_interest = self.next_interest
