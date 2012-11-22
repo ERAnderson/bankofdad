@@ -1,8 +1,13 @@
+###############################################################################
+
+# Stand library imports
 from datetime import date, timedelta
 import sqlite3
 import sqlalchemy
 
-from traits.api import HasTraits
+# ETS imports
+from traits.api import HasTraits, Property, Int, Float, String
+from traitsus.api import View
 
 allowance_period = timedelta(7)
 interest_period = allowance_period
@@ -21,14 +26,13 @@ def previous_sunday(today):
         days_since_sunday = 7
     return today - timedelta(days_since_sunday)
 
-class Person(object):
-    def __init__(self, first_name="", last_name="", DOB=(2000,1,1)):
-        self.first_name=first_name
-        self.last_name=last_name
-        self.DOB=date(*DOB)
+class Person(HasTraits):
+    first_name = String
+    last_name = String
+    DOB = Date
+    age = Property(Int, depends_on="DOB")
 
-    @property
-    def age(self):
+    def _get_age(self):
         time_since_birth = date.today() - self.DOB
         return int(time_since_birth.days / 365.25 * 2.) / 2.
 
