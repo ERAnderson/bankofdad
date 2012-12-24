@@ -2,8 +2,9 @@
 
 # Stand library imports
 from datetime import date, timedelta
-#import sqlite3
-#import sqlalchemy
+import sqlite3
+import sqlalchemy
+from numpy import genfromtxt
 
 # ETS imports
 from traits.api import HasTraits, Property, Instance, Int, Date, Enum, Float, \
@@ -90,6 +91,11 @@ class Account(HasTraits):
         else:
             self.balace *= 1. + loan_interest_rate
         self.last_interest = self.next_interest
+
+    def load_file(self, filename):
+        dt = [('Date', "S10"), ('Action', 'S9'), ('Amount', 'S6'), ('Balance', 'S6'),
+              ('comment', 'S24'), ('f1', '<f8'), ('f2', '<f8')]
+
 
 if __name__ == "__main__":
     w = Transaction(kind = "withdrawal", trans_date=date.today(),
