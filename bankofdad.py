@@ -2,12 +2,12 @@
 
 # Stand library imports
 from datetime import date, timedelta
-import sqlite3
-import sqlalchemy
+#import sqlite3
+#import sqlalchemy
 
 # ETS imports
 from traits.api import HasTraits, Property, Instance, Int, Date, Enum, Float, \
-     String
+     String, List
 from traitsui.api import View
 
 allowance_period = timedelta(7)
@@ -39,6 +39,15 @@ class Person(HasTraits):
         time_since_birth = date.today() - self.DOB
         return int(time_since_birth.days / 365.25 * 2.) / 2.
 
+class Transaction(HasTraits):
+    trans_date = Date
+    amount = Float
+    comment = String
+    kind = Enum("withdrawal", "deposit", "allowance", "interest")
+    def __repr__(self):
+        return "{}, {} ${:.2f} '{}'".format(self.trans_date, self.kind, 
+                                            self.amount, self.comment)
+
 class Account(HasTraits):
     savings_interest_rate = Float(1. / 100.)
     loan_interest_rate = Float(2. / 100.)
@@ -50,6 +59,8 @@ class Account(HasTraits):
     last_allowance = Date
     next_allowance = Property(Date, depends_on="last_allowance")
     weekly_allowance = Property(Float)
+
+    transactions = List(Instance(Transaction))
 
     def _get_next_interest(self):
         return last_saturday()
@@ -79,3 +90,8 @@ class Account(HasTraits):
         else:
             self.balace *= 1. + loan_interest_rate
         self.last_interest = self.next_interest
+
+if __name__ == "__main__":
+    w = Transaction(kind = "withdrawal", trans_date=date.today(),
+                    amount=10.34, comment="test transaction")
+    print w
