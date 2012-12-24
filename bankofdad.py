@@ -1,6 +1,7 @@
-###############################################################################
+##############################################################################
+# Standard library imports
+##############################################################################
 
-# Stand library imports
 from datetime import date, timedelta
 import sqlite3
 import sqlalchemy
@@ -48,6 +49,8 @@ class Transaction(HasTraits):
     def __repr__(self):
         return "{}, {} ${:.2f} '{}'".format(self.trans_date, self.kind, 
                                             self.amount, self.comment)
+    def by_date(self):
+        return self.trans_date
 
 class Account(HasTraits):
     savings_interest_rate = Float(1. / 100.)
@@ -95,9 +98,29 @@ class Account(HasTraits):
     def load_file(self, filename):
         dt = [('Date', "S10"), ('Action', 'S9'), ('Amount', 'S6'), ('Balance', 'S6'),
               ('comment', 'S24'), ('f1', '<f8'), ('f2', '<f8')]
-
+        data = genfromtxt(filename, dtype=dt, comments="#", delimiter="\t",
+                          skip_header=1)
+        #import ipdb; ipdb.set_trace()
+        for trans in data:
+            mm, dd, yy = trans["Date"].split("/")
+            if trans["Action"].lower().startswith("withdraw"):
+                kind = "withdrawal"
+            elif trans["Action"].lower().startswith("allow"):
+                kind = "allowance"
+            elif trans["Action"].lower().startswith("inter"):
+                kind = "interest"
+            elif trans["Action"].lower().startswith("dep"):
+                kind = "deposit"
+            self.transactions.append(
+                Transaction(
+                    trans_date=date(int(yy), int(mm), int(dd)),
+                    amount=float(trans["Amount"].replace("$", "")),
+                    kind=kind, comment=str(trans["comment"]),
+                    ))
+#        import IPython; IPython.embed()
 
 if __name__ == "__main__":
-    w = Transaction(kind = "withdrawal", trans_date=date.today(),
-                    amount=10.34, comment="test transaction")
-    print w
+    i = Account(owner=Person(first_name="Ian", last_name="Diller"))
+    i.load_file('ian.tsv')
+    for trans in i.transactions:
+        print trans
