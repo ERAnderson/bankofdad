@@ -7,6 +7,9 @@ import sqlite3
 import sqlalchemy
 from numpy import genfromtxt
 
+from bod_time import previous_saturday, previous_sunday
+from bod_person import Person
+
 # ETS imports
 from traits.api import HasTraits, Property, Instance, Int, Date, Enum, Float, \
      String, List
@@ -14,32 +17,6 @@ from traitsui.api import View
 
 allowance_period = timedelta(7)
 interest_period = allowance_period
-
-def previous_saturday(today):
-    today_day_of_week = today.isoweekday()
-    days_since_saturday = 6 - today_day_of_week
-    if days_since_saturday == 0:
-        days_since_saturday = 7
-    return today - timedelta(days_since_saturday)
-
-def previous_sunday(today):
-    today_day_of_week = today.isoweekday()
-    days_since_sunday = 7 - today_day_of_week
-    if days_since_sunday == 0:
-        days_since_sunday = 7
-    return today - timedelta(days_since_sunday)
-
-class Person(HasTraits):
-    first_name = String
-    last_name = String
-    DOB = Date
-    age = Property(Int, depends_on="DOB")
-
-    def _get_age(self):
-        """Return age rounded to the nearest 1/2 year.
-        """
-        time_since_birth = date.today() - self.DOB
-        return int(time_since_birth.days / 365.25 * 2.) / 2.
 
 class Transaction(HasTraits):
     trans_date = Date
