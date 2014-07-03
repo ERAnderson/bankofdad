@@ -9,6 +9,9 @@ from traits.api import (
 )
 
 # Local imports
+from bankofdad.model.constants import (
+    ALLOWANCE_NAME, DEPOSIT_NAME, INTEREST_NAME, WITHDRAWAL_NAME
+)
 from bankofdad.model.person import Person
 from bankofdad.model.transaction import Transaction
 from bankofdad.util.time_utils import previous_saturday, previous_sunday
