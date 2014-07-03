@@ -2,7 +2,7 @@
 import unittest
 
 # local imports
-from bankofdad import Account
+from bankofdad.model.account import Account
 
 
 class TestAccount(unittest.TestCase):

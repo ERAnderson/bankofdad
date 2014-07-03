@@ -1,6 +1,7 @@
 from datetime import date
 from traits.api import HasTraits, String, Date, Property, Float
 
+
 class Person(HasTraits):
     first_name = String
     last_name = String
@@ -24,7 +25,7 @@ if __name__ == '__main__':
         from bod_person_view import PersonView
     eld_view = PersonView(person=eld)
     session = simple_session(
-        eld.first_name, 
+        eld.first_name,
         'A view of the Person {} {}'.format(eld.first_name, eld.last_name),
         PersonView, person=eld
         )
