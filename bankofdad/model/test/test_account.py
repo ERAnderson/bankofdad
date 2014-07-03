@@ -19,8 +19,15 @@ class TestAccount(unittest.TestCase):
             owner=self.person
         )
 
-    def test_account(self):
-        "test the account class"
-        self.assertEqual(self.account.savings_interest_rate, 0.01)
+    def test_empty_account(self):
+        "test an ampty account class"
         self.assertEqual(self.account.balance, 0.0,
                          "An empty account should have a zero balance.")
+
+    def test_adding_a_deposit(self):
+        deposit_amount = 1.0
+        self.account.make_deposit(
+            amount=deposit_amount,
+            comment="test",
+        )
+        self.assertEqual(self.account.balance, deposit_amount)

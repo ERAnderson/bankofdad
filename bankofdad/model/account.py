@@ -2,10 +2,12 @@
 from datetime import date, timedelta
 
 # Math imports
+import numpy as np
 
 # ETS imports
 from traits.api import (
-    HasTraits, Property, Instance, Date, Enum, Float, List
+    Array, cached_property, Date, Enum, Float, HasTraits, Instance, List,
+    Property
 )
 
 # Local imports
@@ -36,21 +38,35 @@ class Account(HasTraits):
     weekly_allowance = Property(Float)
 
     transactions = List(Instance(Transaction))
+    transaction_amounts = Property(Array,
+                                   depends_on=['transactions',
+                                               'transactions_items'])
 
     # Defaults
 
     # Property calcs
+    @cached_property
     def _get_balance(self):
         if len(self.transactions) > 0:
-            return 0
+            balance = np.sum(self.transaction_amounts)
         else:
-            return 0.0
+            balance = 0.0
+        return balance
 
     def _get_next_interest(self):
         return previous_saturday()
 
     def _get_next_allowance(self):
         return previous_sunday()
+
+    def _get_transaction_amounts(self):
+        amounts = []
+        for t in self.transactions:
+            if t.kind in [WITHDRAWAL_NAME]:
+                amounts.append(-1 * t.amount)
+            else:
+                amounts.append(t.amount)
+        return amounts
 
     def _get_weekly_allowance(self):
         """Weekly rate"""
@@ -64,6 +80,7 @@ class Account(HasTraits):
             self.apply_allowance()
             self.next_allowance += allowance_period
 
+    # Account Actions
     def apply_allowance(self):
         self.balance += self.weekly_allowance
         self.last_allowance = self.next_allowance
@@ -74,3 +91,14 @@ class Account(HasTraits):
         else:
             self.balace *= 1. + loan_interest_rate
         self.last_interest = self.next_interest
+
+    def make_deposit(self, amount, time_stamp=None, comment=""):
+        if time_stamp is None:
+            time_stamp = date.today()
+        transaction = Transaction(
+            amount=amount,
+            comment=comment,
+            kind=DEPOSIT_NAME,
+            time_stamp=time_stamp,
+            )
+        self.transactions.append(transaction)
