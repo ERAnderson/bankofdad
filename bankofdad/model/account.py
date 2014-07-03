@@ -9,10 +9,9 @@ from traits.api import (
 )
 
 # Local imports
-from bankofdad.io.account_reader import load_account_from_csv
 from bankofdad.model.person import Person
 from bankofdad.model.transaction import Transaction
-from bankofdad.util.time_util import last_saturday, last_sunday
+from bankofdad.util.time_utils import previous_saturday, previous_sunday
 
 # Module level variables - TODO - move to config file
 allowance_period = timedelta(7)
@@ -35,11 +34,20 @@ class Account(HasTraits):
 
     transactions = List(Instance(Transaction))
 
+    # Defaults
+
+    # Property calcs
+    def _get_balance(self):
+        if len(self.transactions) > 0:
+            return 0
+        else:
+            return 0.0
+
     def _get_next_interest(self):
-        return last_saturday()
+        return previous_saturday()
 
     def _get_next_allowance(self):
-        return last_sunday()
+        return previous_sunday()
 
     def _get_weekly_allowance(self):
         """Weekly rate"""
@@ -63,8 +71,3 @@ class Account(HasTraits):
         else:
             self.balace *= 1. + loan_interest_rate
         self.last_interest = self.next_interest
-
-    def load_file(self, filename):
-        if filename.endswith(".csv"):
-            account = load_account_from_csv(filename)
-        return account
