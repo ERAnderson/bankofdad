@@ -30,7 +30,7 @@ def load_account_from_csv(filename):
             kind = "deposit"
         transactions.append(
             Transaction(
-                trans_date=date(int(yy), int(mm), int(dd)),
+                time_stamp=date(int(yy), int(mm), int(dd)),
                 amount=float(trans["Amount"].replace("$", "")),
                 kind=kind, comment=str(trans["comment"]),
                 ))

@@ -1,3 +1,6 @@
+# Standard library imports
+from datetime import date
+
 # ETS imports
 from traits.api import HasTraits, Date, Enum, Float, String
 
@@ -8,14 +11,18 @@ from bankofdad.model.constants import (
 
 
 class Transaction(HasTraits):
-    trans_date = Date
+    time_stamp = Date
     amount = Float
     comment = String
     kind = Enum(DEPOSIT_NAME, WITHDRAWAL_NAME, ALLOWANCE_NAME, INTEREST_NAME)
 
     def __repr__(self):
-        return "{}, {} ${:.2f} '{}'".format(self.trans_date, self.kind,
+        return "{}, {} ${:.2f} '{}'".format(self.time_stamp, self.kind,
                                             self.amount, self.comment)
 
+    # Defaults
+    def _time_stamp_default(self):
+        return date.today()
+
     def by_date(self):
-        return self.trans_date
+        return self.time_stamp
