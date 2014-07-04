@@ -1,5 +1,5 @@
 # standard library imports
-from datetime import date
+from datetime import date, timedelta
 import unittest
 
 # local imports
@@ -12,8 +12,8 @@ class TestAccount(unittest.TestCase):
     """
     def setUp(self):
         self.person = Person(
-            name="test",
-            DOB=date.today(),
+            name="4 yr old",
+            DOB=date.today() - timedelta(365 * 4 + 2),
         )
         self.account = Account(
             owner=self.person
@@ -31,3 +31,7 @@ class TestAccount(unittest.TestCase):
             comment="test",
         )
         self.assertEqual(self.account.balance, deposit_amount)
+
+    def test_adding_allowance(self):
+        self.account.apply_allowance(date.today())
+        self.assertEqual(self.account.balance, self.person.age / 2)

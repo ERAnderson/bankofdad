@@ -24,6 +24,8 @@ interest_period = allowance_period
 savings_interest_rate = 0.01
 loan_interest_rate = 0.05
 
+ALLOWANCE_COMMENT = "Allowance for date {}."
+
 
 class Account(HasTraits):
     savings_interest_rate = Float(1. / 100.)
@@ -35,7 +37,6 @@ class Account(HasTraits):
     next_interest = Property(Date, depends_on="last_interest")
     last_allowance = Date
     next_allowance = Property(Date, depends_on="last_allowance")
-    weekly_allowance = Property(Float)
 
     transactions = List(Instance(Transaction))
     transaction_amounts = Property(Array,
@@ -68,9 +69,8 @@ class Account(HasTraits):
                 amounts.append(t.amount)
         return amounts
 
-    def _get_weekly_allowance(self):
-        """Weekly rate"""
-        return self.owner.age / 2.0  # dollars
+    def weekly_allowance_at_date(self, date):
+        return self.owner.age_at_date(date) / 2.0  # dollars
 
     def update(self):
         if date.today() >= self.next_interest:
@@ -81,9 +81,14 @@ class Account(HasTraits):
             self.next_allowance += allowance_period
 
     # Account Actions
-    def apply_allowance(self):
-        self.balance += self.weekly_allowance
-        self.last_allowance = self.next_allowance
+    def apply_allowance(self, date):
+        transaction = Transaction(
+            amount=self.weekly_allowance_at_date(date),
+            comment=ALLOWANCE_COMMENT.format(date.isoformat()),
+            kind=ALLOWANCE_NAME,
+            time_stamp=date,
+        )
+        self.transactions.append(transaction)
 
     def apply_interest(self):
         if self.balance > 0:

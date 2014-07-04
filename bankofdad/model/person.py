@@ -8,9 +8,13 @@ class Person(HasTraits):
     DOB = Date
     age = Property(Float, depends_on="DOB")
 
-    def _get_age(self):
+    def age_at_date(self, date):
         """Return age rounded to the nearest 1/2 year.
         """
+        age = int((date - self.DOB).days / 365.25 * 2) / 2.
+        return age
+
+    def _get_age(self):
         time_since_birth = date.today() - self.DOB
         return int(time_since_birth.days / 365.25 * 2.) / 2.
 
