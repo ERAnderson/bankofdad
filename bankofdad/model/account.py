@@ -12,7 +12,8 @@ from traits.api import (
 
 # Local imports
 from bankofdad.model.constants import (
-    ALLOWANCE_NAME, DEPOSIT_NAME, INTEREST_NAME, WITHDRAWAL_NAME
+    ALLOWANCE_NAME, DEPOSIT_NAME, INTEREST_NAME, WITHDRAWAL_NAME,
+    ALLOWANCE_COMMENT, INTEREST_COMMENT,
 )
 from bankofdad.model.person import Person
 from bankofdad.model.transaction import Transaction
@@ -24,15 +25,13 @@ interest_period = allowance_period
 savings_interest_rate = 0.01
 loan_interest_rate = 0.05
 
-ALLOWANCE_COMMENT = "Allowance for date {}."
-
 
 class Account(HasTraits):
     savings_interest_rate = Float(1. / 100.)
     loan_interest_rate = Float(2. / 100.)
     owner = Instance(Person)
     kind = Enum("Savings")
-    balance = Property(Float)
+    balance = Property(Float, depends_on=['transaction_amounts'])
     last_interest = Date
     next_interest = Property(Date, depends_on="last_interest")
     last_allowance = Date
@@ -41,7 +40,7 @@ class Account(HasTraits):
     transactions = List(Instance(Transaction))
     transaction_amounts = Property(Array,
                                    depends_on=['transactions',
-                                               'transactions_items'])
+                                               'transactions[]'])
 
     # Defaults
 
@@ -60,6 +59,7 @@ class Account(HasTraits):
     def _get_next_allowance(self):
         return previous_sunday()
 
+    @cached_property
     def _get_transaction_amounts(self):
         amounts = []
         for t in self.transactions:
@@ -67,7 +67,7 @@ class Account(HasTraits):
                 amounts.append(-1 * t.amount)
             else:
                 amounts.append(t.amount)
-        return amounts
+        return np.array(amounts)
 
     def weekly_allowance_at_date(self, date):
         return self.owner.age_at_date(date) / 2.0  # dollars
@@ -90,12 +90,18 @@ class Account(HasTraits):
         )
         self.transactions.append(transaction)
 
-    def apply_interest(self):
+    def apply_interest(self, date):
         if self.balance > 0:
-            self.balance *= 1. + savings_interest_rate
+            amount = self.balance * savings_interest_rate
         else:
-            self.balace *= 1. + loan_interest_rate
-        self.last_interest = self.next_interest
+            amount = self.balance * loan_interest_rate
+        transaction = Transaction(
+            amount=amount,
+            comment=INTEREST_COMMENT.format(date.isoformat()),
+            kind=INTEREST_NAME,
+            time_stamp=date,
+        )
+        self.transactions.append(transaction)
 
     def make_deposit(self, amount, time_stamp=None, comment=""):
         if time_stamp is None:
