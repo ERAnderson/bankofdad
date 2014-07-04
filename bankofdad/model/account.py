@@ -113,3 +113,14 @@ class Account(HasTraits):
             time_stamp=time_stamp,
             )
         self.transactions.append(transaction)
+
+    def make_withdrawal(self, amount, time_stamp=None, comment=""):
+        if time_stamp is None:
+            time_stamp = date.today()
+        transaction = Transaction(
+            amount=amount,
+            comment=comment,
+            kind=WITHDRAWAL_NAME,
+            time_stamp=time_stamp,
+            )
+        self.transactions.append(transaction)

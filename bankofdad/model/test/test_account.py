@@ -41,3 +41,9 @@ class TestAccount(unittest.TestCase):
         self.account.apply_interest(date.today())
         self.assertEqual(self.account.balance,
                          deposit_amount * (1 + savings_interest_rate))
+
+    def test_deposit_withdraw(self):
+        self.account.make_deposit(100)
+        self.assertEqual(self.account.balance, 100)
+        self.account.make_withdrawal(100)
+        self.assertEqual(self.account.balance, 0)
