@@ -17,11 +17,13 @@ from bankofdad.model.constants import (
 )
 from bankofdad.model.person import Person
 from bankofdad.model.transaction import Transaction
-from bankofdad.util.time_utils import previous_saturday, previous_sunday
+from bankofdad.util.time_utils import (
+    next_saturday_from_date, next_sunday_from_date
+)
 
 # Module level variables - TODO - move to config file
-allowance_period = timedelta(7)
-interest_period = allowance_period
+default_allowance_period = timedelta(7)
+default_interest_period = default_allowance_period
 savings_interest_rate = 0.01
 loan_interest_rate = 0.05
 
@@ -36,6 +38,7 @@ class Account(HasTraits):
     next_interest = Property(Date, depends_on="last_interest")
     last_allowance = Date
     next_allowance = Property(Date, depends_on="last_allowance")
+    start_date = Date
 
     transactions = List(Instance(Transaction))
     transaction_amounts = Property(Array,
@@ -43,6 +46,14 @@ class Account(HasTraits):
                                                'transactions[]'])
 
     # Defaults
+    def _last_interest_default(self):
+        return self.start_date
+
+    def _last_allowance_default(self):
+        return self.start_date
+
+    def _start_date_default(self):
+        return date.today()
 
     # Property calcs
     @cached_property
@@ -53,11 +64,13 @@ class Account(HasTraits):
             balance = 0.0
         return balance
 
+    @cached_property
     def _get_next_interest(self):
-        return previous_saturday()
+        return next_saturday_from_date(self.last_interest)
 
+    @cached_property
     def _get_next_allowance(self):
-        return previous_sunday()
+        return next_sunday_from_date(self.last_allowance)
 
     @cached_property
     def _get_transaction_amounts(self):
@@ -73,12 +86,15 @@ class Account(HasTraits):
         return self.owner.age_at_date(date) / 2.0  # dollars
 
     def update(self):
-        if date.today() >= self.next_interest:
-            self.apply_allowance()
-            self.next_interest += interest_period
-        if date.today() >= self.next_allowance:
-            self.apply_allowance()
-            self.next_allowance += allowance_period
+        """ Add interest and allowance transactions to bring the account up to
+        date.
+        """
+        while date.today() >= self.next_allowance:
+            self.apply_allowance(self.next_allowance)
+            self.last_allowance = self.next_allowance
+        while date.today() >= self.next_interest:
+            self.apply_interest(self.next_interest)
+            self.last_interest = self.next_interest
 
     # Account Actions
     def apply_allowance(self, date):

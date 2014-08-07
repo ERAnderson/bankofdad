@@ -16,7 +16,8 @@ class TestAccount(unittest.TestCase):
             DOB=date.today() - timedelta(365 * 4 + 2),
         )
         self.account = Account(
-            owner=self.person
+            owner=self.person,
+            start_date=date.today() - timedelta(14),
         )
 
     def test_empty_account_balance(self):
@@ -47,3 +48,18 @@ class TestAccount(unittest.TestCase):
         self.assertEqual(self.account.balance, 100)
         self.account.make_withdrawal(100)
         self.assertEqual(self.account.balance, 0)
+
+    def test_update_account(self):
+        self.account.update()
+        self.assertEqual(len(self.account.transactions), 4,
+                         self.account.transactions)
+
+    def test_next_interest(self):
+        start_date = date.today()
+        self.account.last_interest = start_date
+        self.assertGreater(self.account.next_interest,
+                           self.account.last_interest)
+
+
+if __name__ == "__main__":
+    unittest.main()
